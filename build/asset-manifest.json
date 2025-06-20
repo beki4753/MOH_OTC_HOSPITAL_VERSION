@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/static/css/main.189df0ea.css",
+    "main.js": "/static/js/main.b160dc3c.js",
+    "static/js/213.e3827bd2.chunk.js": "/static/js/213.e3827bd2.chunk.js",
+    "static/js/455.5b2a5d4e.chunk.js": "/static/js/455.5b2a5d4e.chunk.js",
+    "static/media/bg16.jpg": "/static/media/bg16.e9db8bbce0aea6c3486a.jpg",
+    "static/media/logo.png": "/static/media/logo.2bfc5f180b0a33ab76bf.png",
+    "static/media/logo_bg.png": "/static/media/logo_bg.8d1f4869819f0f5da19e.png",
+    "static/media/Amhara-region.png": "/static/media/Amhara-region.84246872351c4432220f.png",
+    "index.html": "/index.html",
+    "main.189df0ea.css.map": "/static/css/main.189df0ea.css.map",
+    "main.b160dc3c.js.map": "/static/js/main.b160dc3c.js.map",
+    "213.e3827bd2.chunk.js.map": "/static/js/213.e3827bd2.chunk.js.map",
+    "455.5b2a5d4e.chunk.js.map": "/static/js/455.5b2a5d4e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.189df0ea.css",
+    "static/js/main.b160dc3c.js"
+  ]
+}
