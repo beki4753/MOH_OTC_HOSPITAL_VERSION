@@ -77,7 +77,7 @@ export const fetchPatientData = async (cardNumber) => {
       "This is error of patient information get from OpenMRS: ",
       error
     );
-    return {};
+    return error;
   }
 };
 

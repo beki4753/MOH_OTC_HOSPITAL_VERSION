@@ -88,16 +88,34 @@ function CBHIUsersManager() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get(`/Payment/get-service-provider`);
-        console.log("This is response : ", response);
+        const response = await api.post(`/Patient/get-patient-cbhi`);
+
         if (response.status === 200) {
           const dataMod =
-            response?.data?.length > 0
-              ? response?.data?.sort((a, b) => b.id - a.id)
+            Array.isArray(response?.data?.data?.value) &&
+            response.data.data.value.length > 0
+              ? response.data.data.value
+                  .map(
+                    (
+                      {
+                        patientFirstName = "",
+                        patientMiddleName = "",
+                        patientLastName = "",
+                        rowID,
+                        ...rest
+                      },
+                      index
+                    ) => ({
+                      ...rest,
+                      patientFName:
+                        `${patientFirstName} ${patientMiddleName} ${patientLastName}`.trim(),
+                      id: index + 1,
+                    })
+                  )
+                  .sort((a, b) => b.id - a.id)
               : [];
-          setUsers(
-            dataMod?.map(({ rowId, ...rest }) => ({ id: rowId, ...rest }))
-          );
+
+          setUsers(dataMod);
         }
       } catch (error) {
         console.error("Fetch woredas error:", error);
@@ -185,15 +203,15 @@ function CBHIUsersManager() {
         cardNumber: formData?.mrn,
       };
 
-      const userData = await fetchPatientData(formData?.mrn);
-      const msg = await registerUser(userData);
+      // const userData = await fetchPatientData(formData?.mrn);
+      // const msg = await registerUser(userData);
 
-      if (msg?.toLowerCase().includes("internal server error.")) {
-        toast.error("Someting is wrong. please try again!");
-        return;
-      }
+      // if (msg?.toLowerCase().includes("internal server error.")) {
+      //   toast.error("Someting is wrong. please try again!");
+      //   return;
+      // }
 
-      const response = await api.post("/Payment/add-service-provider", payload);
+      const response = await api.post("/Patient/add-patient-cbhi", payload);
       if (response?.status === 201) {
         toast.success("CBHI User Regustered Success Fully.");
         setReferesh((prev) => !prev);
@@ -209,9 +227,10 @@ function CBHIUsersManager() {
   };
 
   const columns = [
-    { field: "mrn", headerName: "MRN", flex: 1 },
+    { field: "patientCardNumber", headerName: "MRN", flex: 1 },
+    { field: "patientFName", headerName: "Patient Name", flex: 1 },
     { field: "idNo", headerName: "ID", flex: 1 },
-    { field: "provider", headerName: "Woreda/Kebele", flex: 1 },
+    { field: "woreda", headerName: "Woreda/Kebele", flex: 1 },
     { field: "goth", headerName: "Goth", flex: 1 },
     { field: "referalNo", headerName: "Referral No.", flex: 1 },
     { field: "letterNo", headerName: "Letter No.", flex: 1 },
@@ -281,7 +300,7 @@ function CBHIUsersManager() {
 
       if (patientName?.length <= 0) {
         if (formDataError?.mrn?.length <= 0 && formData?.mrn?.length > 0) {
-          const response = await fetchPatientData(formData?.mrn);
+          const response = await fetchPatientData(Number(formData?.mrn));
 
           if (
             response?.patientFirstName ||
@@ -296,7 +315,9 @@ function CBHIUsersManager() {
               response?.patientLastName;
             setPatientName(fullName);
           } else {
-            toast.error("Card Number Not Registered.");
+            toast.error(
+              response?.response?.data?.details || "Card Number Not Registered."
+            );
           }
         }
       }

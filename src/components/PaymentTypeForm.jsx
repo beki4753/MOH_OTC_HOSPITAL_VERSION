@@ -229,7 +229,7 @@ const PaymentTypeManager = () => {
       setIsLoading(true);
       const payload = {
         type: formData?.type,
-        description: editingId
+        discription: editingId
           ? formData?.descriptions?.filter((d) => d?.description?.trim() !== "")
           : formData?.descriptions
               ?.filter((d) => d?.description?.trim() !== "")

@@ -8,6 +8,9 @@ const router = express.Router();
 const normalizeText = (input, options = {}) => {
   const { removePunctuation = false, keepSpaces = true } = options;
 
+  if (typeof input !== "string") {
+    input = "";
+  }
   return (
     input
       // Normalize to NFC Unicode form
@@ -32,15 +35,15 @@ const normalizeText = (input, options = {}) => {
 };
 
 router.post("/orders", async (req, res) => {
-  const { cardNumber, orderType } = req.body;
-
-  if (!cardNumber || !orderType) {
-    return res
-      .status(400)
-      .json({ error: "cardNumber and orderType are required" });
-  }
-
   try {
+    const { cardNumber, orderType } = req.body;
+
+    if (!cardNumber || !orderType) {
+      return res
+        .status(400)
+        .json({ error: "cardNumber and orderType are required" });
+    }
+
     // Step 1: Get patient by card number
     const patientRes = await api.get("/patient", {
       params: {
@@ -95,23 +98,6 @@ const getOrder = async () => {
   }
 };
 
-const getReq = async () => {
-  try {
-    const response = await axios.put(
-      "http://10.113.14.75:1010/api/Patient/get-nurse-request-cashier",
-      {
-        headers: {
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidGVzdDEiLCJqdGkiOiIyMDkxZDExZi1lNGU2LTRiODUtOGUxZC1mYTAxZTE3NmUwYTUiLCJVc2VyVHlwZSI6IkNhc2hpZXIiLCJEZXBhcnRlbWVudCI6Ikhvc3BpdGFsIiwiSG9zcGl0YWwiOiJEQiBSZWZlcnJhbCBIb3NwaXRhbCIsInVzZXJJZCI6ImEzNzE5NjZhLTdiNzYtNDk4ZC05Y2Q1LThkYWMxY2NmMTNjYSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3NTAzOTg4NjAsImlzcyI6IkZyZWVUcmFpbmVkIn0.VONjtSMHOKr2ZqrZEtyF7-evI0lomjsJxZcZLw0sDwE`,
-        },
-      }
-    );
-
-    console.log("This is response: ", response?.data);
-  } catch (error) {
-    console.log(error);
-  }
-};
-// getReq();
 //getOrder()
 
 module.exports = router;

@@ -60,7 +60,7 @@ function TrafficAccidentCrud() {
   const [isFetching, setIsFetching] = useState(false);
   const [patientName, setPatientName] = useState("");
 
-  const theme = useTheme()
+  const theme = useTheme();
 
   //Fetch DataGrid data
   useEffect(() => {
@@ -127,12 +127,14 @@ function TrafficAccidentCrud() {
         id: editIndex !== null ? formData?.id : 0,
         patientCardNumber: formData?.patientCardNumber,
         accAddress: formData?.acceedentAddress,
-        accDate: formData?.accedentDate,
+        accDate: formData?.accedentDate?.split("+")[0],
         policeName: formData?.policeName,
         policePhone: formData?.policePhone,
         plateNumber: formData?.plateNumber,
         certificate: formData?.carCertificate,
       };
+
+      console.log("This is the payload: ", payload);
 
       if (editIndex !== null) {
         const response = await api.put(
@@ -146,14 +148,14 @@ function TrafficAccidentCrud() {
           setFormData(initialForm);
         }
       } else {
-        const userData = await fetchPatientData(formData?.patientCardNumber);
+        // const userData = await fetchPatientData(formData?.patientCardNumber);
 
-        const msg = await registerUser(userData);
+        // const msg = await registerUser(userData);
 
-        if (msg?.toLowerCase().includes("internal server error.")) {
-          toast.error("Someting is wrong. please try again!");
-          return;
-        }
+        // if (msg?.toLowerCase().includes("internal server error.")) {
+        //   toast.error("Someting is wrong. please try again!");
+        //   return;
+        // }
 
         const response = await api.post(
           "/Patient/add-patient-accedent",
@@ -348,7 +350,9 @@ function TrafficAccidentCrud() {
           formDataError?.patientCardNumber?.length <= 0 &&
           formData?.patientCardNumber?.length > 0
         ) {
-          const response = await fetchPatientData(formData?.patientCardNumber);
+          const response = await fetchPatientData(
+            Number(formData?.patientCardNumber)
+          );
 
           if (
             response?.patientFirstName ||
@@ -363,7 +367,9 @@ function TrafficAccidentCrud() {
               response?.patientLastName;
             setPatientName(fullName);
           } else {
-            toast.error("Card Number Not Registered.");
+            toast.error(
+              response?.response?.data?.details || "Card Number Not Registered."
+            );
           }
         }
       }
@@ -757,8 +763,6 @@ function TrafficAccidentCrud() {
           <DataGrid
             rows={records}
             columns={columns}
-            pageSize={5}
-            rowsPerPageOptions={[5]}
             disableRowSelectionOnClick
             getRowId={(row) => row.id}
             localeText={{

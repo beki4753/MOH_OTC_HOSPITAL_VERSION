@@ -24,6 +24,9 @@ const AddHospitalServices = ({
   const fileInput = useRef(null);
   const columns = [
     { field: "Services", headerName: "Hospital Services", flex: 1 },
+    { field: "ShortCode", headerName: "Short Code", flex: 1 },
+    { field: "Group", headerName: "Group", flex: 1 },
+    { field: "SubGroup", headerName: "SubGroup", flex: 1 },
     { field: "Amount", headerName: "Amount", flex: 1 },
   ];
 
@@ -56,8 +59,11 @@ const AddHospitalServices = ({
   const handleUploadToServer = async () => {
     try {
       onSubmit({
-        services: rows.map((item) => item.Services),
-        Amount: rows.map((item) => item.Amount),
+        purpose: rows.map((item) => item.Services),
+        amount: rows.map((item) => item.Amount),
+        shortCode: rows.map((item) => item.ShortCode),
+        group: rows.map((item) => item.Group),
+        subgroup: rows.map((item) => item.SubGroup),
       });
     } catch (error) {
       console.error(error);

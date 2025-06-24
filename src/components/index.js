@@ -35,3 +35,4 @@ export { default as FriendlyAgeFilterDataGrid } from "./FriendlyAgeFilterDataGri
 export { default as DischargeForm } from "./DischargeForm";
 export { default as PaymentTypeForm } from "./PaymentTypeForm";
 export { default as PaymentTypeLimitForm } from "./PaymentTypeLimitForm";
+export { default as PaymentRecords } from "./PaymentRecords";

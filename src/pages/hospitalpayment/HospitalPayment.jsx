@@ -805,15 +805,14 @@ const HospitalPayment = () => {
         organization: formData?.organization || "-",
         groupID: "-",
       };
-      console.log("This is payload: ", payload);
-      const userData = await fetchPatientData(formData?.cardNumber);
+      // const userData = await fetchPatientData(formData?.cardNumber);
 
-      const msg = await registerUser(userData);
+      // const msg = await registerUser(userData);
 
-      if (msg?.toLowerCase().includes("internal server error.")) {
-        toast.error("Someting is wrong. please try again!");
-        return;
-      }
+      // if (msg?.toLowerCase().includes("internal server error.")) {
+      //   toast.error("Someting is wrong. please try again!");
+      //   return;
+      // }
 
       const response = await api.post("/Payment/add-payment", payload, {
         headers: {
@@ -841,7 +840,7 @@ const HospitalPayment = () => {
     } catch (error) {
       console.error(error);
       setIsPrintLoading(false);
-      toast.error(error?.response?.data?.msg || "Internal Server Error.");
+      toast.error(error?.response?.data?.errorDescription || "Internal Server Error.");
     }
   };
 
@@ -1025,7 +1024,7 @@ const HospitalPayment = () => {
           cardNumberError?.length <= 0 &&
           formData?.cardNumber?.length > 0
         ) {
-          const response = await fetchPatientData(formData?.cardNumber);
+          const response = await fetchPatientData(Number(formData?.cardNumber));
 
           if (
             response?.patientFirstName ||
@@ -1040,7 +1039,9 @@ const HospitalPayment = () => {
               response?.patientLastName;
             setPatientName(fullName);
           } else {
-            toast.error("Card Number Not Registered.");
+            toast.error(
+              response?.response?.data?.details || "Card Number Not Registered."
+            );
           }
         }
       }

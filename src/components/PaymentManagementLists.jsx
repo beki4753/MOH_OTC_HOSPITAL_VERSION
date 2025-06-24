@@ -14,7 +14,11 @@ import {
 import AddHospitalServices from "./AddHospitalServices";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { DataGrid } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridToolbarContainer,
+  GridToolbarExport,
+} from "@mui/x-data-grid";
 import { Add, Edit, Delete } from "@mui/icons-material";
 import api from "../utils/api";
 import { getTokenValue } from "../services/user_service";
@@ -28,6 +32,19 @@ const categories = [
   "Hospital Services",
   "Payment Methods",
 ];
+
+function CustomToolbar() {
+  return (
+    <GridToolbarContainer>
+      <GridToolbarExport
+        csvOptions={{
+          fileName: "my_data",
+          utf8WithBom: true,
+        }}
+      />
+    </GridToolbarContainer>
+  );
+}
 
 const PaymentManagementLists = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +73,7 @@ const PaymentManagementLists = () => {
         const result = {
           [key]: obj,
         };
+
         setData((prevData) => ({ ...prevData, ...result }));
       }
     } catch (error) {
@@ -160,10 +178,7 @@ const PaymentManagementLists = () => {
           createdBy: tokenvalue.name,
         },
         "Payment Methods": { type: name, createdBy: tokenvalue.name },
-        "Hospital Services": {
-          purpose: params.services,
-          amount: params.Amount,
-        },
+        "Hospital Services": params,
         "CBHI Providers": {
           provider: name,
           service: "CBHI",
@@ -214,10 +229,7 @@ const PaymentManagementLists = () => {
 
       if (editId !== null && apiEndpointsEdit[category]) {
         try {
-          await api.put(
-            apiEndpointsEdit[category],
-            requestBodyEdit[category]
-          );
+          await api.put(apiEndpointsEdit[category], requestBodyEdit[category]);
 
           toast.success(`${category} updated successfully!`);
           setRefresh((prev) => !prev);
@@ -427,6 +439,21 @@ const PaymentManagementLists = () => {
                       flex: 1.1,
                     },
                     {
+                      field: "shortCodes",
+                      headerName: "Short Code",
+                      flex: 1,
+                    },
+                    {
+                      field: "group",
+                      headerName: "Group",
+                      flex: 1,
+                    },
+                    {
+                      field: "subgroup",
+                      headerName: "Sub Group",
+                      flex: 1,
+                    },
+                    {
                       field: "amount",
                       headerName: "Amount",
                       flex: 0.5,
@@ -460,7 +487,7 @@ const PaymentManagementLists = () => {
                             </IconButton>
                           </>
                         ),
-                      flex: 0.2,
+                      flex: 0.5,
                     },
                   ]
                 : [
@@ -504,6 +531,7 @@ const PaymentManagementLists = () => {
                   ]
             }
             autoHeight
+            components={{ Toolbar: CustomToolbar }}
           />
         </div>
       ))}

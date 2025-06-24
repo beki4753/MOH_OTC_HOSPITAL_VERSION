@@ -25,7 +25,7 @@ import MOHLogo from "../../assets/logo_bg.png";
 import ScienceIcon from "@mui/icons-material/Science";
 import LocalHotelIcon from "@mui/icons-material/LocalHotel";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
-import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -251,7 +251,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 <Item
                   title="Payment Types"
                   to="/payment-type"
-                  icon={<CategoryOutlinedIcon  />}
+                  icon={<CategoryOutlinedIcon />}
                   selected={selected}
                   setSelected={setSelected}
                 />
@@ -455,6 +455,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                   <Item
                     title="Reports"
                     to="/reports"
+                    icon={<BarChartOutlinedIcon />}
+                    selected={selected}
+                    setSelected={setSelected}
+                  />
+                  <Item
+                    title="Reports New"
+                    to="/reports-new"
                     icon={<BarChartOutlinedIcon />}
                     selected={selected}
                     setSelected={setSelected}

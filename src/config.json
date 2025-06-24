@@ -1,4 +1,4 @@
 {
-  "bakendURL": "http://10.113.14.75:1010",
-  "openMRS": "http://localhost:5000"
+  "bakendURL": "http://10.113.14.162:1010",
+  "openMRS": "http://10.113.14.162:5000"
 }

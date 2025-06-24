@@ -40,7 +40,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { formatAccounting2 } from "../pages/hospitalpayment/HospitalPayment";
 import ReceiptModal from "../pages/hospitalpayment/ReceiptModal";
 import { generatePDF } from "../pages/hospitalpayment/HospitalPayment";
-import PatientTransactionsModal from "./PatientTransactionsModal";
 import CancelConfirm from "./CancelConfirm";
 import { CarCrash, Refresh } from "@mui/icons-material";
 import { renderETDateAtCell } from "./PatientSearch";
@@ -89,8 +88,6 @@ function PaymentManagement() {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [isPrintLoading, setIsPrintLoading] = useState(false);
-  const [openDetail, setOpenDetail] = useState(false);
-  const [detailData, setDetailData] = useState([]);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [cancelLoad, setCancelLoad] = useState(false);
   const [renderDescription, setRenderDescription] = useState(false);
@@ -233,9 +230,14 @@ function PaymentManagement() {
     try {
       if (confirm.message === "Yes Please!") {
         setCancelLoad(true);
+        const endPoint = selectedRow?.whoRequested
+          ?.toLowerCase()
+          ?.includes("nurse")
+          ? "/Patient/cancel-nurse-request"
+          : "/Patient/cancel-patient-request";
         const results = await Promise.allSettled(
           confirm?.selectedPayload?.map((item) =>
-            api.delete("/Patient/cancel-patient-request", {
+            api.delete(endPoint, {
               data: {
                 patientCardNumber: item.patientCardNumber,
                 groupID: item.groupID,
@@ -497,7 +499,7 @@ function PaymentManagement() {
       }
     } catch (error) {
       console.error("This is Error on handle Save: ", error);
-      toast.error(error?.response?.data?.msg || "Internal Server Error.");
+      toast.error(error?.response?.data?.errorDescription || "Internal Server Error.");
     } finally {
       setLoading(false);
       setIsPrintLoading(false);
@@ -608,10 +610,7 @@ function PaymentManagement() {
           loggedInUser: tokenvalue?.name,
         });
 
-        const response2 = await api.put(
-          "/Patient/get-nurse-request-cashier",
-          {}
-        );
+        const response2 = await api.put("/Patient/get-nurse-request-cashier");
 
         const modData2 =
           response2?.data?.length > 0
@@ -669,7 +668,7 @@ function PaymentManagement() {
                 })
               )
             : [];
-        console.log("This is mod data: ", response2.data);
+
         const ModDataID = modData.map((item, index) => {
           return {
             ...item,
@@ -750,33 +749,6 @@ function PaymentManagement() {
     } catch (err) {
       console.error("generateAndOpenPDF error:", err);
     }
-  };
-
-  const handleDoubleClick = (data) => {
-    try {
-      const services = data.row.rquestedServices || [];
-
-      setOpenDetail(true);
-
-      const dataToSet =
-        services.length > 0
-          ? services.map((item, index) => ({
-              id: index + 1,
-              patientFName: data.row.patientFName,
-              patientCardNumber: data.row.patientCardNumber,
-              ...item, // includes amount, service, catagory
-            }))
-          : [];
-      setDetailData(dataToSet);
-    } catch (error) {
-      console.error("Double-click error: ", error);
-      toast.error("Unable to open Detail Data.");
-    }
-  };
-
-  const handleDetailClose = () => {
-    setOpenDetail(false);
-    setDetailData([]);
   };
 
   const handleOpenPage = async () => {
@@ -1004,7 +976,6 @@ function PaymentManagement() {
             // getRowId={(row) => row.patientCardNumber}
             loading={isLoading}
             columns={columns}
-            onRowDoubleClick={handleDoubleClick}
           />
         </Grid>
       </Grid>
@@ -1471,11 +1442,6 @@ function PaymentManagement() {
         data={receiptData}
         onPrint={handleSave}
         onloading={isPrintLoading}
-      />
-      <PatientTransactionsModal
-        open={openDetail}
-        onClose={handleDetailClose}
-        rows={detailData}
       />
       <CancelConfirm
         isOpen={openConfirm}

@@ -37,8 +37,6 @@ import {
   PaymentManagementLists,
   EmployeeUploadManager,
   ReportReceiptFetcher,
-  PatientRegistration,
-  PatientSearch,
   CBHIUsersManager,
   TrafficAccidentForm,
   TreatmentEntry,
@@ -49,6 +47,7 @@ import {
   TreatmentEntryR,
   PaymentTypeForm,
   PaymentTypeLimitForm,
+  PaymentRecords,
 } from "./components";
 
 const tokenvalue = getTokenValue();
@@ -272,6 +271,16 @@ const router = createBrowserRouter([
             element={<PaymentTypeLimitForm />}
             allowedRoles={["Admin"]}
             allowedCategory={["Admin"]}
+          />
+        ),
+      },
+      {
+        path: "reports-new",
+        element: (
+          <ProtectedRoute
+            element={<PaymentRecords />}
+            allowedRoles={["User"]}
+            allowedCategory={["CASHIER"]}
           />
         ),
       },

@@ -195,14 +195,14 @@ const TreatmentEntryR = () => {
         return;
       }
 
-      const userData = await fetchPatientData(formData?.cardNumber);
+      // const userData = await fetchPatientData(formData?.cardNumber);
 
-      const msg = await registerUser(userData);
+      // const msg = await registerUser(userData);
 
-      if (msg?.toLowerCase().includes("internal server error.")) {
-        toast.error("Someting is wrong. please try again!");
-        return;
-      }
+      // if (msg?.toLowerCase().includes("internal server error.")) {
+      //   toast.error("Someting is wrong. please try again!");
+      //   return;
+      // }
 
       if (formData?.reason.length > 0) {
         const response = await api.post("/Patient/add-patient-request", {
@@ -433,7 +433,7 @@ const TreatmentEntryR = () => {
           formDataError?.cardNumber?.length <= 0 &&
           formData?.cardNumber?.length > 0
         ) {
-          const response = await fetchPatientData(formData?.cardNumber);
+          const response = await fetchPatientData(Number(formData?.cardNumber));
 
           if (
             response?.patientFirstName ||
@@ -456,7 +456,9 @@ const TreatmentEntryR = () => {
               handleBlur();
             }
           } else {
-            toast.error("Card Number Not Registered.");
+            toast.error(
+              response?.response?.data?.details || "Card Number Not Registered."
+            );
           }
         }
       }

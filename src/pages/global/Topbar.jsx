@@ -69,6 +69,21 @@ const Topbar = () => {
     }
   };
 
+  // Upload Services
+  const handleDownloadUploadServicesFile = () => {
+    try {
+      const link = document.createElement("a");
+      link.href = `${window.location.origin}/assets/files/Services.xlsx`;
+      link.download = "Services.xlsx";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   const handleHelp = () => {
     try {
       const pdf = `${window.location.origin}/assets/files/Moh Documentation.pdf`;
@@ -186,6 +201,12 @@ const Topbar = () => {
               <FileDownloadIcon />
             </ListItemIcon>
             Get Register Credit User File
+          </MenuItem>
+          <MenuItem onClick={() => handleDownloadUploadServicesFile()}>
+            <ListItemIcon>
+              <FileDownloadIcon />
+            </ListItemIcon>
+            Service Upload
           </MenuItem>
           <MenuItem onClick={() => handleHelp()}>
             <ListItemIcon>
