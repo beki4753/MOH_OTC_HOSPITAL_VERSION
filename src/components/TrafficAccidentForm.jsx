@@ -125,7 +125,7 @@ function TrafficAccidentCrud() {
       }
       const payload = {
         id: editIndex !== null ? formData?.id : 0,
-        patientCardNumber: formData?.patientCardNumber,
+        patientCardNumber: `${Number(formData?.patientCardNumber)}`,
         accAddress: formData?.acceedentAddress,
         accDate: formData?.accedentDate?.split("+")[0],
         policeName: formData?.policeName,
@@ -133,8 +133,6 @@ function TrafficAccidentCrud() {
         plateNumber: formData?.plateNumber,
         certificate: formData?.carCertificate,
       };
-
-      console.log("This is the payload: ", payload);
 
       if (editIndex !== null) {
         const response = await api.put(
@@ -148,15 +146,23 @@ function TrafficAccidentCrud() {
           setFormData(initialForm);
         }
       } else {
-        // const userData = await fetchPatientData(formData?.patientCardNumber);
+        const userData = await fetchPatientData(
+          Number(formData?.patientCardNumber)
+        );
 
-        // const msg = await registerUser(userData);
+        let msg;
+        if (Object.values(userData || {})?.some((item) => item?.length > 0)) {
+          msg = await registerUser(userData);
+        } else {
+          toast.error("Patient Is Not Registered.");
+          return;
+        }
 
-        // if (msg?.toLowerCase().includes("internal server error.")) {
-        //   toast.error("Someting is wrong. please try again!");
-        //   return;
-        // }
-
+        if (msg?.toLowerCase().includes("internal server error.")) {
+          toast.error("Someting is wrong. please try again!");
+          return;
+        }
+        
         const response = await api.post(
           "/Patient/add-patient-accedent",
           payload

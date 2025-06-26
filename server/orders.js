@@ -1,37 +1,19 @@
-// orders.js
+// routes/orders.js
 const express = require("express");
 const api = require("./api");
-const axios = require("axios");
-
+const db = require("./db");
 const router = express.Router();
 
-const normalizeText = (input, options = {}) => {
+const normalizeText = (input = "", options = {}) => {
   const { removePunctuation = false, keepSpaces = true } = options;
-
-  if (typeof input !== "string") {
-    input = "";
-  }
-  return (
-    input
-      // Normalize to NFC Unicode form
-      .normalize("NFC")
-
-      // Convert to lowercase
-      .toLowerCase()
-
-      // Remove diacritics (accents)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-
-      // Remove punctuation if specified
-      .replace(removePunctuation ? /[^\w\s]|_/g : "", "")
-
-      // Replace multiple spaces with single space
-      .replace(/\s+/g, keepSpaces ? " " : "")
-
-      // Trim whitespace
-      .trim()
-  );
+  return input
+    .normalize("NFC")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(removePunctuation ? /[^\w\s]|_/g : "", "")
+    .replace(/\s+/g, keepSpaces ? " " : "")
+    .trim();
 };
 
 router.post("/orders", async (req, res) => {
@@ -44,7 +26,7 @@ router.post("/orders", async (req, res) => {
         .json({ error: "cardNumber and orderType are required" });
     }
 
-    // Step 1: Get patient by card number
+    // 1. Find patient by card number
     const patientRes = await api.get("/patient", {
       params: {
         identifier: cardNumber,
@@ -52,52 +34,56 @@ router.post("/orders", async (req, res) => {
         v: "full",
       },
     });
-
     const patient = patientRes.data.results[0];
-    if (!patient) {
-      return res.status(404).json({ error: "Patient not found" });
-    }
-
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
     const patientUuid = patient.uuid;
 
-    // Step 2: Get order types list
+    // 2. Find order type UUID
     const orderTypeRes = await api.get("/ordertype");
-
-    const matchedOrderType = orderTypeRes.data.results.filter(
+    const matchedOrderType = orderTypeRes.data.results.find(
       (type) => normalizeText(type.display) === normalizeText(orderType)
     );
-
-    if (!matchedOrderType) {
+    if (!matchedOrderType)
       return res.status(404).json({ error: "Order type not found" });
-    }
 
-    // Step 3: Get orders for patient filtered by orderType
+    // 3. Fetch orders for that patient
     const ordersRes = await api.get(`/order`, {
       params: {
-        patientUuid: patientUuid,
-        orderTypeUuid: matchedOrderType[0].uuid,
+        patientUuid,
+        orderTypeUuid: matchedOrderType.uuid,
         v: "full",
       },
     });
-    console.log({ orders: ordersRes.data.results });
-    res.json({ orders: ordersRes.data.results });
+
+    const orders = ordersRes.data.results;
+    await db.poolConnect;
+
+    // 4. Enrich each order with price info
+    const enrichedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const conceptUuid = order?.concept?.uuid;
+
+        const request = db.pool.request();
+        request.input("uuid", db.sql.VarChar, conceptUuid);
+        const result = await request.execute(`SP_FETCHBYUUID`);
+
+        const totalPrice = result.recordset[0]?.Amount || 0;
+
+        return {
+          ...order,
+          price: totalPrice,
+        };
+      })
+    );
+
+    res.json({ orders: enrichedOrders });
   } catch (error) {
     console.error("Orders API Error:", error.message);
-    res
-      .status(500)
-      .json({ error: "Failed to fetch orders", details: error.message });
+    res.status(500).json({
+      error: "Failed to fetch or enrich orders",
+      details: error.message,
+    });
   }
 });
-
-const getOrder = async () => {
-  try {
-    const orderTypeRes = await api.get("/ordertype");
-    console.log("orderTypeRes: ", orderTypeRes?.data);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-//getOrder()
 
 module.exports = router;

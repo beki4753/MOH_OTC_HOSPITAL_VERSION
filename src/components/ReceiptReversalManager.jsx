@@ -12,6 +12,7 @@ import ReversalModal from "./ReversalModal";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../utils/api";
+import LockIcon from "@mui/icons-material/Lock";
 import { renderETDateAtCell } from "./PatientSearch";
 import { formatAccounting2 } from "../pages/hospitalpayment/HospitalPayment";
 
@@ -22,12 +23,34 @@ const ReceiptReversalManager = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [reversalLoad, setReversalLoad] = useState(false);
+  const [errorM, setErrorM] = useState("");
+  const [isCalcul, setIsCalcul] = useState(false);
 
   const theme = useTheme();
+
+  const ReceiptRegex = /^[a-zA-Z0-9-]+$/;
+
+  const validateReceipt = (value) => {
+    if (!ReceiptRegex.test(value) && value?.length > 0) {
+      setErrorM("Please Insert Valid Receipt Number.");
+    } else {
+      setErrorM("");
+    }
+  };
 
   const handleSearch = async () => {
     try {
       setIsLoading(true);
+      if (searchRef?.length <= 0) {
+        toast.error("Please Insert Reference Number First.");
+        return;
+      }
+
+      if (!!errorM) {
+        toast.error("Please Insert (VALID) Reference Number.");
+        return;
+      }
+      setFilteredReceipts([]);
       const response = await api.put("/Payment/payment-by-refno", {
         paymentId: searchRef,
       });
@@ -38,7 +61,6 @@ const ReceiptReversalManager = () => {
               ...rest,
             }))
           : [];
-
       if (modData?.length <= 0) {
         toast.info("Data not found.");
         return;
@@ -53,9 +75,34 @@ const ReceiptReversalManager = () => {
     }
   };
 
-  const handleOpenModal = (receipt) => {
-    setSelectedReceipt(receipt);
-    setModalOpen(true);
+  const handleOpenModal = async () => {
+    try {
+      setIsCalcul(true);
+      if (filteredReceipts?.length <= 0) {
+        toast.error("No Data.");
+        return;
+      }
+      const result = await filteredReceipts.reduce((acc, curr) => {
+        for (const key in curr) {
+          if (key === "paymentAmount") {
+            acc.paymentAmount = (acc.paymentAmount || 0) + curr.paymentAmount;
+          } else if (key === "paymentReason") {
+            acc.paymentReason = acc.paymentReason + ", " + curr.paymentReason;
+          } else {
+            acc[key] = acc[key] || curr[key];
+          }
+        }
+        return acc;
+      });
+      setSelectedReceipt(result);
+      setIsCalcul(false);
+      setModalOpen(true);
+      return;
+    } catch (error) {
+      console.error("This is handle Open Modal handler Error: ", error);
+    } finally {
+      setIsCalcul(false);
+    }
   };
 
   const handleModalClose = () => {
@@ -73,7 +120,7 @@ const ReceiptReversalManager = () => {
           "Content-Type": "application/json",
         },
       });
-      if (response?.data?.refNo?.length > 0) {
+      if (response?.status === 200) {
         toast.success("Transaction Reversed Successfully.");
         setModalOpen(false);
         setFilteredReceipts([]);
@@ -112,18 +159,26 @@ const ReceiptReversalManager = () => {
       },
     },
     {
-      field: "actions",
-      headerName: "Action",
+      field: "Status",
+      headerName: "Status",
       flex: 1,
-      renderCell: (params) => (
-        <Button
-          variant="contained"
-          color="warning"
-          onClick={() => handleOpenModal(params.row)}
-        >
-          Reverse
-        </Button>
-      ),
+      renderCell: (params) =>
+        params?.row?.isReversed && (
+          <p
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              padding: 0,
+              marginTop: "0",
+              color: "red",
+              gap: "3px",
+            }}
+          >
+            <LockIcon color="error" fontSize="small" />
+            <span>Reversed</span>
+          </p>
+        ),
     },
   ];
 
@@ -139,7 +194,12 @@ const ReceiptReversalManager = () => {
           variant="outlined"
           size="small"
           value={searchRef}
-          onChange={(e) => setSearchRef(e.target.value)}
+          onChange={(e) => {
+            setSearchRef(e.target.value);
+            validateReceipt(e.target.value);
+          }}
+          error={!!errorM}
+          helperText={errorM}
           InputProps={{
             sx: {
               "& .MuiOutlinedInput-notchedOutline": {
@@ -167,7 +227,7 @@ const ReceiptReversalManager = () => {
           variant="contained"
           color={theme.palette.mode === "light" ? "primary" : "secondary"}
           disabled={isLoading}
-          onClick={handleSearch}
+          onClick={() => handleSearch()}
         >
           {isLoading ? (
             <CircularProgress size={24} color="inherit" />
@@ -175,6 +235,23 @@ const ReceiptReversalManager = () => {
             "Search"
           )}
         </Button>
+      </Box>
+      <Box justifySelf={"flex-end"} sx={{ margin: "10px" }}>
+        {isCalcul ? (
+          <CircularProgress size={24} color="inherit" />
+        ) : (
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={() => handleOpenModal()}
+            disabled={
+              isCalcul ||
+              filteredReceipts?.some((item) => item.isReversed === true)
+            }
+          >
+            Reverse
+          </Button>
+        )}
       </Box>
 
       <DataGrid

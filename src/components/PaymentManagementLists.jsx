@@ -10,19 +10,20 @@ import {
   TextField,
   IconButton,
   useTheme,
+  Box,
+  CircularProgress,
 } from "@mui/material";
 import AddHospitalServices from "./AddHospitalServices";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  DataGrid,
-  GridToolbarContainer,
-  GridToolbarExport,
-} from "@mui/x-data-grid";
-import { Add, Edit, Delete } from "@mui/icons-material";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import { DataGrid, GridToolbarContainer } from "@mui/x-data-grid";
+import { Add, Edit, Delete, ReplayOutlined } from "@mui/icons-material";
 import api from "../utils/api";
 import { getTokenValue } from "../services/user_service";
 import { formatAccounting2 } from "../pages/hospitalpayment/HospitalPayment";
+import api2 from "../utils/api2";
 
 const tokenvalue = getTokenValue();
 const categories = [
@@ -32,19 +33,6 @@ const categories = [
   "Hospital Services",
   "Payment Methods",
 ];
-
-function CustomToolbar() {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarExport
-        csvOptions={{
-          fileName: "my_data",
-          utf8WithBom: true,
-        }}
-      />
-    </GridToolbarContainer>
-  );
-}
 
 const PaymentManagementLists = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,8 +46,56 @@ const PaymentManagementLists = () => {
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
   const [refresh, setRefresh] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const theme = useTheme();
+
+  function CustomToolbar({ rows, columns, category }) {
+    const exportToExcel = async () => {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Payment Data");
+
+      // Define headers
+      worksheet.columns = columns
+        .filter((col) => col.field !== "actions") // Skip actions column
+        .map((col) => ({
+          header: col.headerName || col.field,
+          key: col.field,
+          width: 25,
+        }));
+
+      // Add rows
+      rows.forEach((row) => {
+        const rowData = {};
+        worksheet.columns.forEach((col) => {
+          rowData[col.key] = row[col.key];
+        });
+        worksheet.addRow(rowData);
+      });
+
+      // Style headers
+      worksheet.getRow(1).font = { bold: true };
+
+      // Generate and trigger download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `${category}_data_.xlsx`);
+    };
+
+    return (
+      <GridToolbarContainer>
+        <Button
+          variant="outlined"
+          color={theme.palette.mode === "dark" ? "secondary" : "primary"}
+          onClick={() => exportToExcel()}
+        >
+          Export to Excel
+        </Button>
+      </GridToolbarContainer>
+    );
+  }
 
   // Generalized fetch function
   const fetchData = async (endpoint, key, mapFunction) => {
@@ -140,6 +176,109 @@ const PaymentManagementLists = () => {
     setFormData({ category: "", name: "", address: "" });
   };
 
+  const getRowsAndColumns = (category) => {
+    const baseData = data[category] || [];
+
+    const rows = baseData.map((item) => ({
+      id: item.id,
+      name:
+        category === "Digital Payment Channels"
+          ? item.channel
+          : category === "Payment Methods"
+          ? item.type
+          : category === "Hospital Services"
+          ? item.purpose
+          : category === "CBHI Providers"
+          ? item.provider
+          : item.organization,
+      createdBy: item.createdby,
+      location:
+        category === "Organizations with Agreements" ? item.location : "",
+      amount:
+        category === "Hospital Services" ? formatAccounting2(item.amount) : 0,
+      shortCodes: item.shortCodes,
+      group: item.group,
+      subgroup: item.subgroup,
+    }));
+
+    let columns = [];
+
+    if (category === "Hospital Services") {
+      columns = [
+        { field: "name", headerName: "Name", flex: 1.1 },
+        { field: "shortCodes", headerName: "ShortCode", flex: 1 },
+        { field: "group", headerName: "Group", flex: 1 },
+        { field: "subgroup", headerName: "SubGroup", flex: 1 },
+        { field: "amount", headerName: "Amount", flex: 0.5 },
+      ];
+    } else if (category === "Organizations with Agreements") {
+      columns = [
+        { field: "name", headerName: "Name", flex: 1 },
+        { field: "location", headerName: "Address", flex: 1 },
+      ];
+    } else {
+      columns = [{ field: "name", headerName: "Name", flex: 1 }];
+    }
+
+    columns.push({
+      field: "actions",
+      headerName: "Actions",
+      flex: 0.5,
+      renderCell: (params) =>
+        params?.row?.createdBy?.toUpperCase() !== "SYS" && (
+          <>
+            <IconButton
+              onClick={() => {
+                if (category === "Organizations with Agreements") {
+                  handleOpen2(
+                    category,
+                    params.row.name,
+                    params.row.location,
+                    params.row.id
+                  );
+                } else if (category === "Hospital Services") {
+                  handleOpen2(
+                    category,
+                    params.row.name,
+                    params.row.location,
+                    params.row.id
+                  );
+                } else {
+                  handleOpen(category, params.row.name, params.row.id);
+                }
+              }}
+            >
+              <Edit />
+            </IconButton>
+            <IconButton
+              onClick={() => handleDelete(category, params.row.id)}
+              color="error"
+            >
+              <Delete />
+            </IconButton>
+          </>
+        ),
+    });
+
+    return { rows, columns };
+  };
+
+  const handleUpdateList = async () => {
+    try {
+      setIsUpdating(true);
+      const response = await api2.get("/k/sync-concepts/");
+      if (response?.status === 200) {
+        toast.success(response?.data?.message || "Updated Successfully.");
+        setRefresh((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("This is handleUpdateList Error: ", error);
+      toast.error(error?.response?.data?.error || "Internal server Error.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleChange = (e) => {
     if (e.target.name === "address") {
       setFormData({
@@ -155,7 +294,6 @@ const PaymentManagementLists = () => {
     try {
       const { category, name, address } = formData;
       if (!name.trim()) return;
-
       const apiEndpoints = {
         "Digital Payment Channels": "/Lookup/payment-channel",
         "Payment Methods": "/Lookup/payment-type",
@@ -318,221 +456,63 @@ const PaymentManagementLists = () => {
           <Typography variant="h6" gutterBottom>
             {category}
           </Typography>
-          <Button
-            variant="contained"
-            color={theme.palette.mode === "light" ? "primary" : "secondary"}
-            startIcon={<Add />}
-            onClick={() => {
-              category === "Organizations with Agreements"
-                ? handleOpen2(category)
-                : category === "Hospital Services"
-                ? handleSomething(category)
-                : handleOpen(category);
-            }}
-            style={{ marginBottom: "10px" }}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1} // margin bottom
           >
-            Add {category}
-          </Button>
-          <DataGrid
-            rows={(data[category] || []).map((item, index) => ({
-              id:
-                category === "Digital Payment Channels"
-                  ? item.id
-                  : category === "Payment Methods"
-                  ? item.id
+            <Button
+              variant="contained"
+              color={theme.palette.mode === "light" ? "primary" : "secondary"}
+              startIcon={<Add />}
+              onClick={() => {
+                category === "Organizations with Agreements"
+                  ? handleOpen2(category)
                   : category === "Hospital Services"
-                  ? item.id
-                  : category === "CBHI Providers"
-                  ? item.id
-                  : category === "Organizations with Agreements"
-                  ? item.id
-                  : "",
+                  ? handleSomething(category)
+                  : handleOpen(category);
+              }}
+            >
+              Add {category}
+            </Button>
 
-              name:
-                category === "Digital Payment Channels"
-                  ? item.channel
-                  : category === "Payment Methods"
-                  ? item.type
-                  : category === "Hospital Services"
-                  ? item.purpose
-                  : category === "CBHI Providers"
-                  ? item.provider
-                  : category === "Organizations with Agreements"
-                  ? item.organization
-                  : "",
-              createdBy: item.createdby,
-              location:
-                category === "Digital Payment Channels"
-                  ? ""
-                  : category === "Payment Methods"
-                  ? ""
-                  : category === "Hospital Services"
-                  ? ""
-                  : category === "CBHI Providers"
-                  ? ""
-                  : category === "Organizations with Agreements"
-                  ? item.location
-                  : "",
-              amount:
-                category === "Digital Payment Channels"
-                  ? 0
-                  : category === "Payment Methods"
-                  ? 0
-                  : category === "Hospital Services"
-                  ? formatAccounting2(item.amount)
-                  : category === "CBHI Providers"
-                  ? 0
-                  : category === "Organizations with Agreements"
-                  ? 0
-                  : "",
-            }))}
-            columns={
-              category === "Organizations with Agreements"
-                ? [
-                    {
-                      field: "name",
-                      headerName: "Name",
-                      flex: 1,
-                    },
-                    {
-                      field: "location",
-                      headerName: "Address",
-                      flex: 1,
-                    },
-                    {
-                      field: "actions",
-                      headerName: "Actions",
-                      renderCell: (params) =>
-                        params?.row?.createdBy?.toUpperCase() !== "SYS" && (
-                          <>
-                            <IconButton
-                              onClick={() => {
-                                handleOpen2(
-                                  category,
-                                  params.row.name,
-                                  params.row.location,
-                                  params.row.id
-                                );
-                              }}
-                            >
-                              <Edit />
-                            </IconButton>
+            {category === "Hospital Services" && (
+              <Button
+                variant="outlined"
+                color={theme.palette.mode === "light" ? "primary" : "secondary"}
+                startIcon={<ReplayOutlined />}
+                onClick={() => handleUpdateList()}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Update List"
+                )}
+              </Button>
+            )}
+          </Box>
 
-                            <IconButton
-                              onClick={() =>
-                                handleDelete(category, params.row.id)
-                              }
-                              color="error"
-                            >
-                              <Delete />
-                            </IconButton>
-                          </>
-                        ),
-                      flex: 0.5,
-                    },
-                  ]
-                : category === "Hospital Services"
-                ? [
-                    {
-                      field: "name",
-                      headerName: "Name",
-                      flex: 1.1,
-                    },
-                    {
-                      field: "shortCodes",
-                      headerName: "Short Code",
-                      flex: 1,
-                    },
-                    {
-                      field: "group",
-                      headerName: "Group",
-                      flex: 1,
-                    },
-                    {
-                      field: "subgroup",
-                      headerName: "Sub Group",
-                      flex: 1,
-                    },
-                    {
-                      field: "amount",
-                      headerName: "Amount",
-                      flex: 0.5,
-                    },
-                    {
-                      field: "actions",
-                      headerName: "Actions",
-                      renderCell: (params) =>
-                        params?.row?.createdBy?.toUpperCase() !== "SYS" && (
-                          <>
-                            <IconButton
-                              onClick={() => {
-                                handleOpen2(
-                                  category,
-                                  params.row.name,
-                                  params.row.location,
-                                  params.row.id
-                                );
-                              }}
-                            >
-                              <Edit />
-                            </IconButton>
-
-                            <IconButton
-                              onClick={() =>
-                                handleDelete(category, params.row.id)
-                              }
-                              color="error"
-                            >
-                              <Delete />
-                            </IconButton>
-                          </>
-                        ),
-                      flex: 0.5,
-                    },
-                  ]
-                : [
-                    {
-                      field: "name",
-                      headerName: "Name",
-                      flex: 1,
-                    },
-                    {
-                      field: "actions",
-                      headerName: "Actions",
-                      renderCell: (params) =>
-                        (category === "Hospital Services" ||
-                          (params?.row?.createdBy?.toUpperCase() !== "SYS" &&
-                            category !== "Hospital Services")) && (
-                          <>
-                            <IconButton
-                              onClick={() => {
-                                handleOpen(
-                                  category,
-                                  params.row.name,
-                                  params.row.id
-                                );
-                              }}
-                            >
-                              <Edit />
-                            </IconButton>
-
-                            <IconButton
-                              onClick={() =>
-                                handleDelete(category, params.row.id)
-                              }
-                              color="error"
-                            >
-                              <Delete />
-                            </IconButton>
-                          </>
-                        ),
-                      flex: 0.5,
-                    },
-                  ]
-            }
-            autoHeight
-            components={{ Toolbar: CustomToolbar }}
-          />
+          {(() => {
+            const { rows, columns } = getRowsAndColumns(category);
+            return (
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                autoHeight
+                slots={{
+                  toolbar: () => (
+                    <CustomToolbar
+                      rows={rows}
+                      columns={columns}
+                      category={category}
+                    />
+                  ),
+                }}
+              />
+            );
+          })()}
         </div>
       ))}
 

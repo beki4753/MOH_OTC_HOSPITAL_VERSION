@@ -490,6 +490,7 @@ function PaymentManagement() {
           employeeId: formData?.employeeId || "",
           cbhiId: response?.data?.data?.map((item) => item.patientCBHI_ID)[0],
           refNo: response?.data?.refNo || "-",
+          recipt: formData?.PRNo || "-",
         };
 
         await generatePDF(data);
@@ -499,7 +500,9 @@ function PaymentManagement() {
       }
     } catch (error) {
       console.error("This is Error on handle Save: ", error);
-      toast.error(error?.response?.data?.errorDescription || "Internal Server Error.");
+      toast.error(
+        error?.response?.data?.errorDescription || "Internal Server Error."
+      );
     } finally {
       setLoading(false);
       setIsPrintLoading(false);

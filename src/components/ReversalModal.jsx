@@ -13,6 +13,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { renderETDateAtCell } from "./PatientSearch";
+import { formatAccounting } from "../pages/hospitalpayment/HospitalPayment";
 function ReversalModal({ open, onClose, receipt, onConfirm, loading, theme }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
@@ -40,8 +41,6 @@ function ReversalModal({ open, onClose, receipt, onConfirm, loading, theme }) {
         return;
       }
 
-      setError("");
-
       const payload = {
         paymentRefNo: receipt?.referenceNo,
         paymentType: receipt?.paymentType || "-",
@@ -59,11 +58,8 @@ function ReversalModal({ open, onClose, receipt, onConfirm, loading, theme }) {
         patientWorkID: receipt?.patientWorkID || "-",
         reverse: true,
       };
-      console.log("payload: ", payload);
-      onConfirm(payload);
 
-      // Reset fields
-      setReason("");
+      onConfirm(payload);
     } catch (error) {
       console.error(error);
     }
@@ -126,7 +122,7 @@ function ReversalModal({ open, onClose, receipt, onConfirm, loading, theme }) {
           <Box display="flex" justifyContent="space-between" py={0.5}>
             <Typography color="text.secondary">Amount Paid:</Typography>
             <Typography fontWeight={700} color="green">
-              ETB {Number(receipt?.paymentAmount).toFixed(2)}
+              {formatAccounting(receipt?.paymentAmount)}
             </Typography>
           </Box>
 

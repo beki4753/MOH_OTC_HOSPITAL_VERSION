@@ -113,7 +113,6 @@ const DischargeForm = () => {
                   })
                 )
               : [];
-
           setRowData(
             modData?.sort(
               (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
@@ -242,8 +241,14 @@ const DischargeForm = () => {
 
   const handleChange = (e, index) => {
     if (e.target.name === "patientCardNumber") {
-      setFromData((prev) => ({ ...prev, patientName: "" }));
+      setFromData({
+        ...formData,
+        patientName: "",
+        [e.target.name]: e.target.value,
+      });
+
       validateMrn(e.target.name, e.target.value);
+      return;
     }
 
     if (["quantity", "unitCost", "name"]?.includes(e.target.name)) {
@@ -536,18 +541,26 @@ const DischargeForm = () => {
         return;
       }
 
-      // const userDataResponse = await fetchPatientData(patientCardNumber);
+      const userDataResponse = await fetchPatientData(
+        Number(formData?.patientCardNumber)
+      );
 
-      // const msg = await registerUser(userDataResponse);
-      // if (msg?.toLowerCase().includes("internal server error.")) {
-      //   toast.error(
-      //     "Something is wrong with user registration. Please try again!"
-      //   );
-      //   return;
-      // }
+      let msg;
+      if (
+        Object.values(userDataResponse || {})?.some((item) => item?.length > 0)
+      ) {
+        msg = await registerUser(userDataResponse);
+      } else {
+        toast.error("Patient Is Not Registered.");
+        return;
+      }
 
+      if (msg?.toLowerCase().includes("internal server error.")) {
+        toast.error("Someting is wrong. please try again!");
+        return;
+      }
       const payload = {
-        patientCardNumber: formData?.patientCardNumber,
+        patientCardNumber: `${Number(formData?.patientCardNumber)}`,
         dischargeDate: formData?.dischargeDate,
         admissionDate: formData?.admissionDate,
         hasMedication: formData?.medicationUse,
@@ -659,6 +672,7 @@ const DischargeForm = () => {
               onChange={handleChange}
               error={!!formDataError?.patientName}
               helperText={formDataError?.patientName}
+              disabled
               InputProps={{
                 sx: {
                   "& .MuiOutlinedInput-notchedOutline": {
@@ -672,6 +686,10 @@ const DischargeForm = () => {
                   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                     borderColor:
                       theme.palette.mode === "dark" ? "#fff" : "#000",
+                  },
+                  "&.Mui-disabled": {
+                    color: "rgba(41, 225, 48, 0.71)",
+                    fontWeight: "bold",
                   },
                   color: theme.palette.mode === "dark" ? "#fff" : "#000",
                 },

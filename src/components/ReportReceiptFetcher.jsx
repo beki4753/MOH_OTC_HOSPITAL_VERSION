@@ -18,6 +18,7 @@ import api from "../utils/api";
 import { generatePDF } from "../pages/hospitalpayment/HospitalPayment";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import LockIcon from "@mui/icons-material/Lock";
 import * as XLSX from "xlsx";
 
 const formatter2 = new Intl.NumberFormat("en-US", {
@@ -40,27 +41,49 @@ const ReportReceiptFetcher = () => {
   const [receiptData, setReceiptData] = useState([]);
   const [errorM, setErrorM] = useState("");
   const [dispPrint, setDispPrint] = useState(false);
-const theme = useTheme()
+  const theme = useTheme();
   const ReceiptRegex = /^[a-zA-Z0-9-]+$/;
 
   const columns = [
-    { field: "id", headerName: "ID", width: 90 },
-    { field: "registeredOn", headerName: "Date", width: 200 },
-    { field: "referenceNo", headerName: "Reciept Number", width: 200 },
-    { field: "patientCardNumber", headerName: "Card Number", width: 150 },
-    { field: "patientName", headerName: "Patient Name", width: 150 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "registeredOn", headerName: "Date", flex: 1 },
+    { field: "referenceNo", headerName: "Reciept Number", flex: 1 },
+    { field: "patientCardNumber", headerName: "Card Number", flex: 1 },
+    { field: "patientName", headerName: "Patient Name", flex: 1 },
     {
       field: "paymentAmount",
       headerName: "Amount",
-      width: 120,
+      flex: 1,
       renderCell: (params) => formatAccounting2(params.row.paymentAmount),
     },
     {
       field: "paymentType",
       headerName: "Payment Method",
-      width: 120,
+      flex: 1,
     },
-    { field: "paymentReason", headerName: "Reason", width: 190 },
+    { field: "paymentReason", headerName: "Reason", flex: 1 },
+    {
+      field: "isReversed",
+      headerName: "IsReversed",
+      flex: 1,
+      renderCell: (params) =>
+        params?.row?.isReversed && (
+          <p
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              padding: 0,
+              marginTop: "0",
+              color: "red",
+              gap: "3px",
+            }}
+          >
+            <LockIcon color="error" fontSize="small" />
+            <span>Reversed</span>
+          </p>
+        ),
+    },
   ];
 
   const exportToExcel = (data) => {
@@ -141,6 +164,10 @@ const theme = useTheme()
         }
       } else if (tab === 1 && receiptNumber) {
         if (receiptData.length > 0) {
+          if (receiptData?.some((item) => item.isReversed === true)) {
+            toast.error("Reversed receipt can't be printed.");
+            return;
+          }
           const data = await transformPayments(receiptData || []);
           generatePDF(data);
         } else {
@@ -161,6 +188,7 @@ const theme = useTheme()
       refNo: first?.referenceNo,
       id: first?.id,
       cardNumber: first?.patientCardNumber,
+      recipt: first?.recipt,
       patientName: first?.patientName,
       hospitalName: first?.hospitalName,
       department: first?.department,

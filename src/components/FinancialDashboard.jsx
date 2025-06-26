@@ -78,7 +78,6 @@ const FinancialDashboard = () => {
                 ...rest,
               })) || []
             : [];
-
         const fetchColl = async () => {
           try {
             const response2 = await api.get(`/Collection/collection`);
@@ -104,7 +103,6 @@ const FinancialDashboard = () => {
         };
 
         const collected = await fetchColl();
-
         const maxId =
           collected.length > 0
             ? Math.max(...collected.map((item) => item.id))

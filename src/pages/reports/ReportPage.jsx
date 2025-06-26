@@ -743,6 +743,7 @@ const ReportPage = () => {
       const datas = await api.put("/Payment/rpt-all-Payment", {
         startDate: startDate.replace(" +03:00", ""),
         endDate: endDate.replace(" +03:00", ""),
+        reversedOnly: false,
       });
 
       if (datas?.status === 200) {

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const ordersRouter = require("./orders");
+const conceptRouter = require("./concept");
 const api = require("./api.js");
 
 const app = express();
@@ -24,7 +25,7 @@ const handlePatientRequest = async (req, res) => {
         v: "full",
       },
     });
-    
+
     res.status(200).json(response.data);
   } catch (error) {
     console.error("API Error:", error.message);
@@ -38,6 +39,7 @@ const handlePatientRequest = async (req, res) => {
 app.post("/change", handlePatientRequest);
 
 app.use("/r", ordersRouter);
+app.use("/k", conceptRouter);
 
 app.listen(5000, () => {
   console.log("Proxy server running on http://localhost:5000");

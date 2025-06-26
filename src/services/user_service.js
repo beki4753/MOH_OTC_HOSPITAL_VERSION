@@ -76,7 +76,6 @@ export const registerUser = async (payload) => {
       message = "Empty payload.";
       return message;
     }
-
     const response = await api.post("/Patient/add-patient-info", payload);
 
     if (response?.status === 200) {

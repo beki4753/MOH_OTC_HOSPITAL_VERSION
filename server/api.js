@@ -7,9 +7,9 @@ const isDev = process.env.NODE_ENV === "development";
 
 const api = axios.create({
   baseURL: `${process.env.REACT_APP_OPENMRS_URL}/openmrs/ws/rest/v1`,
-  httpsAgent: isDev
-    ? new https.Agent({ rejectUnauthorized: false })
-    : undefined,
+  //httpsAgent: isDev
+  //? new https.Agent({ rejectUnauthorized: false })
+  //: undefined,
 });
 
 api.interceptors.request.use(

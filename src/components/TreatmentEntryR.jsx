@@ -195,14 +195,20 @@ const TreatmentEntryR = () => {
         return;
       }
 
-      // const userData = await fetchPatientData(formData?.cardNumber);
+      const userData = await fetchPatientData(Number(formData?.cardNumber));
 
-      // const msg = await registerUser(userData);
+      let msg;
+      if (Object.values(userData || {})?.some((item) => item?.length > 0)) {
+        msg = await registerUser(userData);
+      } else {
+        toast.error("Patient Is Not Registered.");
+        return;
+      }
 
-      // if (msg?.toLowerCase().includes("internal server error.")) {
-      //   toast.error("Someting is wrong. please try again!");
-      //   return;
-      // }
+      if (msg?.toLowerCase().includes("internal server error.")) {
+        toast.error("Someting is wrong. please try again!");
+        return;
+      }
 
       if (formData?.reason.length > 0) {
         const response = await api.post("/Patient/add-patient-request", {
@@ -395,25 +401,14 @@ const TreatmentEntryR = () => {
         getCategoryName(formData?.category)
       );
       if (fetched?.length > 0) {
-        setFormData((prev) => {
-          return {
-            ...prev,
-            reason: fetched?.map((item) => item?.display),
-            amount: fetched
-              ?.map((item) => item?.display)
-              ?.map((item) => {
-                return {
-                  purpose: item,
-                  Amount: fullReasons
-                    .filter(
-                      (itm) =>
-                        normalizeText(itm.purpose) === normalizeText(item)
-                    )
-                    .map((item) => item.amount)[0],
-                };
-              }),
-          };
-        });
+        setFormData((prev) => ({
+          ...prev,
+          reason: fetched?.map((item) => item?.display),
+          amount: fetched?.map((item) => ({
+            purpose: item?.display,
+            Amount: item?.price,
+          })),
+        }));
       } else {
         toast.info(`${formData?.category} Order not found!`);
       }

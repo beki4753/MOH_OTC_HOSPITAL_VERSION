@@ -29,6 +29,7 @@ import { EthDateTime } from "ethiopian-calendar-date-converter";
 import api from "../utils/api";
 import { registerUser } from "../services/user_service";
 import { fetchPatientData } from "../services/open_mrs_api_call";
+import { renderETDateAtCell } from "./PatientSearch";
 
 const initialFormState = {
   mrn: "",
@@ -114,7 +115,6 @@ function CBHIUsersManager() {
                   )
                   .sort((a, b) => b.id - a.id)
               : [];
-
           setUsers(dataMod);
         }
       } catch (error) {
@@ -148,6 +148,7 @@ function CBHIUsersManager() {
     setOpenDialog(false);
     setFormData(initialFormState);
     setFormDataError({ name: "Reset" });
+    setPatientName("");
   };
 
   const handleChange = (e) => {
@@ -167,7 +168,7 @@ function CBHIUsersManager() {
         (key) => !formData[key]
       );
 
-      if (missingFields.length > 0) {
+      if (missingFields?.length > 0) {
         const fieldNames = missingFields
           .map((key) => requiredFields[key])
           .join(", ");
@@ -200,20 +201,28 @@ function CBHIUsersManager() {
         letterNo: formData?.letterNumber,
         examination: formData?.examination,
         expDate: formData?.expDate,
-        cardNumber: formData?.mrn,
+        cardNumber: `${Number(formData?.mrn)}`,
       };
 
-      // const userData = await fetchPatientData(formData?.mrn);
-      // const msg = await registerUser(userData);
+      const userData = await fetchPatientData(Number(formData?.mrn));
+      let msg;
+      if (Object.values(userData || {})?.some((item) => item?.length > 0)) {
+        msg = await registerUser(userData);
+      } else {
+        toast.error("Patient Is Not Registered.");
+        return;
+      }
 
-      // if (msg?.toLowerCase().includes("internal server error.")) {
-      //   toast.error("Someting is wrong. please try again!");
-      //   return;
-      // }
+      if (msg?.toLowerCase().includes("internal server error.")) {
+        toast.error("Someting is wrong. please try again!");
+        return;
+      }
 
       const response = await api.post("/Patient/add-patient-cbhi", payload);
       if (response?.status === 201) {
-        toast.success("CBHI User Regustered Success Fully.");
+        toast.success(
+          response?.data?.msg || "CBHI User Regustered Success Fully."
+        );
         setReferesh((prev) => !prev);
         setPatientName("");
         handleClose();
@@ -240,26 +249,7 @@ function CBHIUsersManager() {
       headerName: "Expired Date",
       flex: 1,
       renderCell: (params) => {
-        try {
-          const rawDate = params?.row?.expDate;
-          if (!rawDate) return "";
-
-          const parsedDate = new Date(rawDate);
-
-          const correctedDate = new Date(
-            parsedDate.getTime() + 3 * 60 * 60 * 1000
-          );
-
-          const etDate = EthDateTime.fromEuropeanDate(correctedDate);
-
-          return `${etDate.year}-${String(etDate.month).padStart(
-            2,
-            "0"
-          )}-${String(etDate.date).padStart(2, "0")}`;
-        } catch (err) {
-          console.error("Date conversion error:", err);
-          return "";
-        }
+        return renderETDateAtCell(params?.row?.expDate);
       },
     },
   ];

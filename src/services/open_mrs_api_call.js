@@ -36,8 +36,8 @@ export const fetchPatientData = async (cardNumber) => {
           appointment: "OPDCLINIC",
           patientPhoneNumber: "",
 
-          iscreadituser: 0,
-          iscbhiuser: 0,
+          iscreadituser: false,
+          iscbhiuser: false,
 
           patientOccupation: "",
           department: "OutPatient Clinic",
@@ -92,7 +92,6 @@ export const fetchOrder = async (cardNumber, ordertype) => {
       cardNumber,
       orderType: ordertype,
     });
-
     if (response?.status === 200) {
       return response.data.orders;
     } else {

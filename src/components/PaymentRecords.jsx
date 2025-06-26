@@ -303,7 +303,7 @@ const PaymentTable = () => {
 
       const res = await api.put("/Payment/Get-all-Payment", payload);
       const data = res?.data?.map(({ paymentDescription, ...rest }) => ({
-        ServiceIS: paymentDescription?.split(":-")[0],
+        ServiceIS: paymentDescription?.split(":")[0],
         paymentDescription,
         ...rest,
       }));

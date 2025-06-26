@@ -229,6 +229,11 @@ export const generatePDF = (data) => {
     doc.setFont("NotoSansEthiopic-Regular", "normal");
     drawText(`Receipt NO : ${data?.refNo || "N/A"}`, marginLeft, yPos);
     yPos += lineHeight;
+    if (data.method.toUpperCase().includes("CASH")) {
+      drawText(`Paper Receipt : ${data?.recipt || "N/A"}`, marginLeft, yPos);
+      yPos += lineHeight;
+    }
+
     drawText(`Address : Debrebrehan`, marginLeft, yPos);
     yPos += lineHeight;
     drawText(`Date : ${renderETDateAtCell(new Date())}`, marginLeft, yPos);
@@ -781,6 +786,7 @@ const HospitalPayment = () => {
       const newPayment = {
         id: payments.length + 1,
         ...receiptData,
+        recipt: formData?.PRNo || "-",
         reason: receiptData.reason.join(", "),
       };
 
@@ -794,7 +800,7 @@ const HospitalPayment = () => {
                   normalizeText(formData?.services)
               )[0]?.id
             : 0,
-        cardNumber: formData.cardNumber,
+        cardNumber: `${Number(formData?.cardNumber)}`,
         amount: formData.amount,
         description: formData?.description || "-",
         createdby: tokenvalue?.name,
@@ -805,14 +811,21 @@ const HospitalPayment = () => {
         organization: formData?.organization || "-",
         groupID: "-",
       };
-      // const userData = await fetchPatientData(formData?.cardNumber);
 
-      // const msg = await registerUser(userData);
+      const userData = await fetchPatientData(Number(formData?.cardNumber));
 
-      // if (msg?.toLowerCase().includes("internal server error.")) {
-      //   toast.error("Someting is wrong. please try again!");
-      //   return;
-      // }
+      let msg;
+      if (Object.values(userData || {})?.some((item) => item?.length > 0)) {
+        msg = await registerUser(userData);
+      } else {
+        toast.error("Patient Is Not Registered.");
+        return;
+      }
+
+      if (msg?.toLowerCase().includes("internal server error.")) {
+        toast.error("Someting is wrong. please try again!");
+        return;
+      }
 
       const response = await api.post("/Payment/add-payment", payload, {
         headers: {
@@ -833,14 +846,15 @@ const HospitalPayment = () => {
         setServices([]);
         toast.success(`Payment Regitstered Under ${response?.data?.refNo}`);
         setRefresh((prev) => !prev);
-
-        generatePDF(final, response?.data?.refNo);
-        setIsPrintLoading(false);
+        generatePDF(final);
       }
     } catch (error) {
       console.error(error);
+      toast.error(
+        error?.response?.data?.errorDescription || "Internal Server Error."
+      );
+    } finally {
       setIsPrintLoading(false);
-      toast.error(error?.response?.data?.errorDescription || "Internal Server Error.");
     }
   };
 

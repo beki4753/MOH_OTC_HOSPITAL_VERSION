@@ -6,6 +6,7 @@ import {
   Button,
   IconButton,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -30,7 +31,7 @@ const EmployeeUploadManager = () => {
   const [loading, setLoading] = useState(false);
   const [isConfOpen, setIsConfOpen] = useState(false);
   const [deleteId, setDeleteId] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const theme = useTheme();
 
   const handleSave = async (payload) => {
@@ -102,7 +103,8 @@ const EmployeeUploadManager = () => {
 
   const handleUploadToDatabase = async () => {
     try {
-      const response = await api.post("/Collection/register_collector", {
+      setIsLoading(true);
+      const payload = {
         employeeID: fileData.map((Item) => Item?.employeeID),
         employeeName: fileData.map((Item) => Item?.employeeName),
         employeePhone: fileData.map((Item) => Item?.employeePhone),
@@ -110,11 +112,16 @@ const EmployeeUploadManager = () => {
         assignedAs: fileData.map((Item) => Item?.assignedAs),
         assignedBy: fileData.map((Item) => Item?.assignedBy),
         contactMethod: fileData.map((Item) => Item?.contactMethod),
-        user: tokenvalue?.name,
-      });
-      toast.success("Upload Successful.");
-      setRefresh((prev) => !prev);
-      setFileData([]);
+      };
+      const response = await api.post(
+        "/Collection/register_collector",
+        payload
+      );
+      if (response?.status === 201) {
+        toast.success("Upload Successful.");
+        setRefresh((prev) => !prev);
+        setFileData([]);
+      }
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(
@@ -123,6 +130,8 @@ const EmployeeUploadManager = () => {
           : "File Upload Failed. please check if empty column exists." ||
               "Internal Server Error."
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -234,11 +243,15 @@ const EmployeeUploadManager = () => {
         <Button
           variant="contained"
           color={theme.palette.mode === "light" ? "primary" : "secondary"}
-          onClick={handleUploadToDatabase}
+          onClick={() => handleUploadToDatabase()}
           sx={{ marginLeft: 2 }}
-          disabled={fileData.length === 0}
+          disabled={fileData.length === 0 || isLoading}
         >
-          Upload to Database
+          {isLoading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "Upload to Database"
+          )}
         </Button>
         <Typography variant="h6" sx={{ m: "15px 0 5px 20px" }}>
           {fileData.length > 0 ? "Viewing from File" : "Viewing Registered"}
