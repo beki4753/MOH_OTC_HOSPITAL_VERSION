@@ -47,7 +47,6 @@ export function getTokenValue() {
     }
 
     const decoded = jwtDecode(token);
-
     return decoded;
   } catch (error) {
     console.error("This is jwtDecode Error: ", error);

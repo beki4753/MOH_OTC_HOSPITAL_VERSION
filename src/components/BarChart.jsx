@@ -20,6 +20,7 @@ const BarChart = ({ isDashboard = false }) => {
           startDate: startDate,
           endDate: today,
           user: tokenvalue?.name,
+          reversedOnly: false,
         });
       
         const summary = response?.data

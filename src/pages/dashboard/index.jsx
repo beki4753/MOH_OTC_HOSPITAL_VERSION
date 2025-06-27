@@ -225,6 +225,7 @@ const Dashboard = () => {
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
           user: tokenValue?.name,
+          reversedOnly: false,
         });
 
         const recentPayments = response?.data

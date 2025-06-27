@@ -44,6 +44,7 @@ import CancelConfirm from "./CancelConfirm";
 import { CarCrash, Refresh } from "@mui/icons-material";
 import { renderETDateAtCell } from "./PatientSearch";
 import { normalizeText } from "../utils/normalizer";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 
 const tokenvalue = getTokenValue();
 
@@ -52,6 +53,7 @@ const icons = {
   CBHI: <VolunteerActivismIcon />,
   Credit: <CreditScoreIcon />,
   "Free of Charge": <MonetizationOnIcon />,
+  Reversed: <CurrencyExchangeIcon />,
   Digital: <AttachMoneyIcon />,
   Traffic: <CarCrash />,
 };
@@ -193,18 +195,63 @@ function PaymentManagement() {
   }, [refresh]);
 
   const updatePaymentSummary = (payments) => {
-    const summary = payments.reduce((acc, payment) => {
-      const { paymentType, paymentAmount } = payment;
-
-      if (!acc[paymentType]) {
-        acc[paymentType] = 0;
+    try {
+      if (!Array.isArray(payments)) {
+        throw new Error("Invalid payments data: expected an array.");
       }
-      acc[paymentType] += parseFloat(paymentAmount);
-      return acc;
-    }, {});
 
-    setTotals(summary);
-    setTotal(Object.values(summary).reduce((a, b) => a + b, 0));
+      const summary = payments.reduce((acc, payment) => {
+        const { paymentType, paymentAmount, isReversed } = payment;
+        const amount = parseFloat(paymentAmount);
+
+        if (isNaN(amount)) {
+          // Skip invalid amounts
+          return acc;
+        }
+
+        // Initialize sums for paymentType if not present
+        if (!acc[paymentType]) {
+          acc[paymentType] = 0;
+        }
+
+        // Initialize sums for reversed payments of this paymentType
+        const reversedKey = `${paymentType} REVERSED`;
+        if (!acc[reversedKey]) {
+          acc[reversedKey] = 0;
+        }
+
+        if (isReversed === true) {
+          // Add to reversed sum for this paymentType (positive amount)
+          acc[reversedKey] -= amount;
+        } else {
+          // Add to normal sum for this paymentType
+          acc[paymentType] += amount;
+        }
+
+        return acc;
+      }, {});
+
+      // Remove reversed keys with zero or falsy values
+      Object.keys(summary).forEach((key) => {
+        if (
+          key.endsWith(" REVERSED") &&
+          (!summary[key] || summary[key] === 0)
+        ) {
+          delete summary[key];
+        }
+      });
+
+      setTotals(summary);
+
+      // Calculate total excluding reversed amounts
+      const total = Object.entries(summary)
+        .filter(([key]) => !key.includes("REVERSED"))
+        .reduce((acc, [, value]) => acc + value, 0);
+
+      setTotal(total);
+    } catch (error) {
+      console.error("This is update Payment Summary Error: ", error);
+    }
   };
 
   useEffect(() => {

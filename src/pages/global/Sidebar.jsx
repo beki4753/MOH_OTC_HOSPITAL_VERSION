@@ -26,6 +26,7 @@ import ScienceIcon from "@mui/icons-material/Science";
 import LocalHotelIcon from "@mui/icons-material/LocalHotel";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -170,6 +171,19 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
               </Box>
             </Box>
           )}
+          {role?.toUpperCase() === "ADMIN" && (
+            <>
+              {!isCollapsed && (
+                <Typography
+                  variant="h6"
+                  color={colors.grey[300]}
+                  sx={{ m: "15px 0 5px 45.1px" }}
+                >
+                  Dashboards
+                </Typography>
+              )}
+            </>
+          )}
 
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             {!["MLT", "RADIOLOGY", "WARD"].includes(
@@ -182,6 +196,18 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 selected={selected}
                 setSelected={setSelected}
               />
+            )}
+
+            {role?.toUpperCase() === "ADMIN" && (
+              <>
+                <Item
+                  title="User-Dashboared"
+                  to="/user-Dashboared"
+                  icon={<DashboardOutlinedIcon />}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
+              </>
             )}
 
             {role?.toUpperCase() === "ADMIN" && (
@@ -292,8 +318,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
               </>
             )}
 
-            {role?.toUpperCase() === "USER" &&
-              tokenvalue?.UserType === "MLT" && (
+            {["ADMIN", "USER"]?.includes(role?.toUpperCase()) &&
+              ["ADMIN", "MLT"]?.includes(
+                tokenvalue?.UserType?.toUpperCase()
+              ) && (
                 <>
                   {!isCollapsed && (
                     <Typography
@@ -314,8 +342,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                   />
                 </>
               )}
-            {role?.toUpperCase() === "USER" &&
-              tokenvalue?.UserType?.toUpperCase() === "RADIOLOGY" && (
+            {["ADMIN", "USER"]?.includes(role?.toUpperCase()) &&
+              ["ADMIN", "RADIOLOGY"]?.includes(
+                tokenvalue?.UserType?.toUpperCase()
+              ) && (
                 <>
                   {!isCollapsed && (
                     <Typography
@@ -336,8 +366,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                   />
                 </>
               )}
-            {role?.toUpperCase() === "USER" &&
-              tokenvalue?.UserType?.toUpperCase() === "WARD" && (
+            {["ADMIN", "USER"]?.includes(role?.toUpperCase()) &&
+              ["ADMIN", "WARD"]?.includes(
+                tokenvalue?.UserType?.toUpperCase()
+              ) && (
                 <>
                   {!isCollapsed && (
                     <Typography
@@ -359,9 +391,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 </>
               )}
 
-            {role?.toUpperCase() === "USER" &&
-              (tokenvalue?.UserType?.toUpperCase() === "CASHIER" ||
-                tokenvalue?.UserType?.toUpperCase() === "SUPERVISOR") && (
+            {["ADMIN", "USER"]?.includes(role?.toUpperCase()) &&
+              ["ADMIN", "CASHIER", "SUPERVISOR"]?.includes(
+                tokenvalue?.UserType?.toUpperCase()
+              ) && (
                 <>
                   {tokenvalue?.UserType?.toUpperCase() === "CASHIER" && (
                     <Item
@@ -413,7 +446,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     />
                   )}
 
-                  {tokenvalue?.UserType?.toUpperCase() === "CASHIER" &&
+                  {["ADMIN", "CASHIER"]?.includes(
+                    tokenvalue?.UserType?.toUpperCase()
+                  ) &&
                     !isCollapsed && (
                       <Typography
                         variant="h6"
@@ -424,7 +459,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                       </Typography>
                     )}
 
-                  {tokenvalue?.UserType?.toUpperCase() === "CASHIER" && (
+                  {["ADMIN", "CASHIER"]?.includes(
+                    tokenvalue?.UserType?.toUpperCase()
+                  ) && (
                     <>
                       <Item
                         title="CBHI Registration"

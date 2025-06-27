@@ -136,6 +136,16 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "user-Dashboared",
+        element: (
+          <ProtectedRoute
+            element={<Dashboard />}
+            allowedRoles={["Admin"]}
+            allowedCategory={["Admin"]}
+          />
+        ),
+      },
+      {
         path: "payments",
         element: (
           <ProtectedRoute
@@ -150,8 +160,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<ReportReceiptFetcher />}
-            allowedRoles={["User"]}
-            allowedCategory={["Cashier", "Supervisor"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Cashier", "Supervisor", "Admin"]}
           />
         ),
       },
@@ -160,8 +170,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<CBHIUsersManager />}
-            allowedRoles={["User"]}
-            allowedCategory={["Cashier"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Cashier", "Admin"]}
           />
         ),
       },
@@ -170,8 +180,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<DischargeForm />}
-            allowedRoles={["User"]}
-            allowedCategory={["Ward"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Ward", "Admin"]}
           />
         ),
       },
@@ -180,8 +190,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<TreatmentEntryR />}
-            allowedRoles={["User"]}
-            allowedCategory={["Radiology"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Radiology", "Admin"]}
           />
         ),
       },
@@ -190,8 +200,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<TreatmentEntry />}
-            allowedRoles={["User"]}
-            allowedCategory={["MLT"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["MLT", "Admin"]}
           />
         ),
       },
@@ -229,8 +239,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<ReportPage />}
-            allowedRoles={["User"]}
-            allowedCategory={["Cashier", "Supervisor"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Cashier", "Supervisor", "Admin"]}
           />
         ),
       },
@@ -239,8 +249,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<CollectedReport />}
-            allowedRoles={["User"]}
-            allowedCategory={["Cashier", "Supervisor"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Cashier", "Supervisor", "Admin"]}
           />
         ),
       },
@@ -249,8 +259,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<TrafficAccidentForm />}
-            allowedRoles={["User"]}
-            allowedCategory={["Cashier"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["Cashier", "Admin"]}
           />
         ),
       },
@@ -279,8 +289,8 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute
             element={<PaymentRecords />}
-            allowedRoles={["User"]}
-            allowedCategory={["CASHIER","SUPERVISOR"]}
+            allowedRoles={["User", "Admin"]}
+            allowedCategory={["CASHIER", "SUPERVISOR", "Admin"]}
           />
         ),
       },

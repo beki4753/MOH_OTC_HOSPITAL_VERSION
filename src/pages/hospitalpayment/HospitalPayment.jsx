@@ -518,21 +518,61 @@ const HospitalPayment = () => {
   }, []);
 
   const updatePaymentSummary = (payments) => {
-    const summary = payments.reduce((acc, payment) => {
-      const { paymentType, paymentAmount } = payment;
-      if (!acc[paymentType]) {
-        acc[paymentType] = 0;
+    try {
+      if (!Array.isArray(payments)) {
+        throw new Error("Invalid payments data: expected an array.");
       }
-      acc[paymentType] += parseFloat(paymentAmount);
-      return acc;
-    }, {});
 
-    const mapped = Object.entries(summary).map(([key, value]) => ({
-      method: key,
-      amount: value,
-    }));
+      const summary = payments.reduce((acc, payment) => {
+        const { paymentType, paymentAmount, isReversed } = payment;
+        const amount = parseFloat(paymentAmount);
 
-    setPaymentSummary(mapped);
+        if (isNaN(amount)) {
+          // Skip invalid amounts or handle as needed
+          return acc;
+        }
+
+        // Initialize sums for paymentType if not present
+        if (!acc[paymentType]) {
+          acc[paymentType] = 0;
+        }
+
+        // Initialize sums for reversed payments of this paymentType
+        const reversedKey = `${paymentType} REVERSED`;
+        if (!acc[reversedKey]) {
+          acc[reversedKey] = 0;
+        }
+
+        if (isReversed === true) {
+          // Add to reversed sum for this paymentType
+          acc[reversedKey] -= amount;
+        } else {
+          // Add to normal sum for this paymentType
+          acc[paymentType] += amount;
+        }
+
+        return acc;
+      }, {});
+
+      // Remove reversed keys with zero or falsy values
+      Object.keys(summary).forEach((key) => {
+        if (
+          key.endsWith(" REVERSED") &&
+          (!summary[key] || summary[key] === 0)
+        ) {
+          delete summary[key];
+        }
+      });
+
+      const mapped = Object.entries(summary).map(([method, amount]) => ({
+        method,
+        amount,
+      }));
+
+      setPaymentSummary(mapped);
+    } catch (error) {
+      console.error("Failed to update payment summary:", error);
+    }
   };
 
   const handleChange = (e) => {
@@ -1731,6 +1771,7 @@ const HospitalPayment = () => {
               <Typography>
                 {formatAccounting(
                   paymentSummary
+                    ?.filter((item) => !item?.method?.includes("REVERSED"))
                     .map((e) => e.amount)
                     .reduce((acc, num) => acc + num, 0)
                 )}

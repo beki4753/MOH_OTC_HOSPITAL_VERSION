@@ -35,6 +35,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
           startDate,
           endDate: today,
           user: tokenvalue?.name,
+          reversedOnly: false,
         });
 
         const filteredData = response?.data || [];
