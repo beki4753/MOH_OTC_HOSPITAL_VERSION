@@ -87,13 +87,15 @@ const ReceiptReversalManager = () => {
           if (key === "paymentAmount") {
             acc.paymentAmount = (acc.paymentAmount || 0) + curr.paymentAmount;
           } else if (key === "paymentReason") {
-            acc.paymentReason = acc.paymentReason + ", " + curr.paymentReason;
+            acc.paymentReason = acc.paymentReason
+              ? acc.paymentReason + ", " + curr.paymentReason
+              : curr.paymentReason;
           } else {
             acc[key] = acc[key] || curr[key];
           }
         }
         return acc;
-      });
+      }, {});
       setSelectedReceipt(result);
       setIsCalcul(false);
       setModalOpen(true);

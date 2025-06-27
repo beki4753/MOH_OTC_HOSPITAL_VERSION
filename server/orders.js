@@ -19,7 +19,6 @@ const normalizeText = (input = "", options = {}) => {
 router.post("/orders", async (req, res) => {
   try {
     const { cardNumber, orderType } = req.body;
-
     if (!cardNumber || !orderType) {
       return res
         .status(400)
@@ -76,7 +75,20 @@ router.post("/orders", async (req, res) => {
       })
     );
 
-    res.json({ orders: enrichedOrders });
+    if (enrichedOrders?.length) {
+      const maxDate = enrichedOrders.reduce((max, order) => {
+        const orderDate = new Date(order.dateActivated);
+        return orderDate > max ? orderDate : max;
+      }, new Date(0));
+
+      const latestOrders = enrichedOrders.filter(
+        (order) => new Date(order.dateActivated).getTime() === maxDate.getTime()
+      );
+
+      res.json({ orders: latestOrders });
+    } else {
+      res.json({ orders: [] });
+    }
   } catch (error) {
     console.error("Orders API Error:", error.message);
     res.status(500).json({

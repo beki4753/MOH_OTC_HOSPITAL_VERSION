@@ -311,7 +311,9 @@ const PaymentTable = () => {
       setPayments(data || []);
       setCreditOrganizations(
         Array.from(
-          new Set((data || []).map((p) => p.creditOrganization).filter(Boolean))
+          new Set(
+            (data || []).map((p) => p.patientWorkingPlace).filter(Boolean)
+          )
         )
       );
       setWoredas(
@@ -336,7 +338,7 @@ const PaymentTable = () => {
       return false;
     if (
       !!creditOrg &&
-      normalizeText(p?.creditOrganization) !== normalizeText(creditOrg)
+      normalizeText(p?.patientWorkingPlace) !== normalizeText(creditOrg)
     )
       return false;
     if (!!woreda && normalizeText(p?.patientWoreda) !== normalizeText(woreda))

@@ -1,18 +1,19 @@
 import { Box, useTheme, Typography, Stack } from "@mui/material";
 import { tokens } from "../theme";
+import { formatAccounting2 } from "../pages/hospitalpayment/HospitalPayment";
 
-const ProgressCircle = ({ 
-  progress = "0.75", 
-  size = "40", 
+const ProgressCircle = ({
+  progress = "0.75",
+  size = "40",
   showLegend = false,
   legendText = "",
   uncollectedLabel = "Uncollected",
-  collectedLabel = "Collected"
+  collectedLabel = "Collected",
 }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const angle = progress * 360;
-  const percentage = Math.round(progress * 100);
+  const percentage = formatAccounting2(progress * 100);
 
   return (
     <Box
@@ -40,31 +41,31 @@ const ProgressCircle = ({
         <Stack direction="row" spacing={2} alignItems="center">
           {/* UNCollected portion legend */}
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Box 
+            <Box
               sx={{
                 width: "12px",
                 height: "12px",
                 borderRadius: "2px",
-                backgroundColor: colors.blueAccent[500]
-              }} 
+                backgroundColor: colors.blueAccent[500],
+              }}
             />
             <Typography variant="caption">
-            {`${100 - percentage}% ${uncollectedLabel}`}
+              {`${(100 - percentage)?.toFixed(2)}% ${uncollectedLabel}`}
             </Typography>
           </Stack>
-          
+
           {/* collected portion legend */}
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Box 
+            <Box
               sx={{
                 width: "12px",
                 height: "12px",
                 borderRadius: "2px",
-                backgroundColor: colors.greenAccent[500]
-              }} 
+                backgroundColor: colors.greenAccent[500],
+              }}
             />
             <Typography variant="caption">
-            {`${percentage}% ${collectedLabel}`}
+              {`${percentage}% ${collectedLabel}`}
             </Typography>
           </Stack>
         </Stack>

@@ -280,7 +280,7 @@ const router = createBrowserRouter([
           <ProtectedRoute
             element={<PaymentRecords />}
             allowedRoles={["User"]}
-            allowedCategory={["CASHIER"]}
+            allowedCategory={["CASHIER","SUPERVISOR"]}
           />
         ),
       },

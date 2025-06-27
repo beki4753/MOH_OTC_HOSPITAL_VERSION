@@ -21,7 +21,6 @@ import api from "../../utils/api";
 
 import { useRef } from "react";
 
-
 const AdminDashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -45,29 +44,33 @@ const AdminDashboard = () => {
   // Fetch uncollected data
   useEffect(() => {
     const fetchUserList = async () => {
-      const response = await api.get("/Admin/users");
+      try {
+        const response = await api.get("/Admin/users");
 
-      const data = response?.data;
+        const data = response?.data;
 
-      const summary = data.reduce((acc, user) => {
-        const { userType } = user;
-        acc[userType] = (acc[userType] || 0) + 1;
-        return acc;
-      }, {});
+        const summary = data.reduce((acc, user) => {
+          const { userType } = user;
+          acc[userType] = (acc[userType] || 0) + 1;
+          return acc;
+        }, {});
 
-      const totalUser = Object.values(summary).reduce(
-        (acc, total) => acc + total,
-        0
-      );
+        const totalUser = Object.values(summary).reduce(
+          (acc, total) => acc + total,
+          0
+        );
 
-      const barData = Object.entries(summary).map(([key, value]) => ({
-        type: key,
-        No_of_User: value,
-      }));
+        const barData = Object.entries(summary).map(([key, value]) => ({
+          type: key,
+          No_of_User: value,
+        }));
 
-      setUserAdded(totalUser);
+        setUserAdded(totalUser);
 
-      setUserType(barData);
+        setUserType(barData);
+      } catch (error) {
+        console.error("This is fetchUserList error: ", error);
+      }
     };
 
     fetchUserList();
@@ -75,14 +78,18 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchOrganization = async () => {
-      const response = await api.get("/Organiztion/Organization");
+      try {
+        const response = await api.get("/Organiztion/Organization");
 
-      const data = response?.data;
+        const data = response?.data;
 
-      const totalOrganization = data.length;
+        const totalOrganization = data.length;
 
-      setOrganizationcount(totalOrganization);
-      setOrgList(data);
+        setOrganizationcount(totalOrganization);
+        setOrgList(data);
+      } catch (error) {
+        console.error("This is fetchOrganization error: ", error);
+      }
     };
 
     fetchOrganization();
@@ -90,29 +97,35 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchBanker = async () => {
-      const response = await api.get("/Organiztion/get-workers");
+      try {
+        const response = await api.get("/Organiztion/get-workers");
 
-      const data = response?.data;
+        const data = response?.data;
 
-      const countBanker = data?.length;
+        const countBanker = data?.length;
 
-      setCountBanker(countBanker);
+        setCountBanker(countBanker);
+      } catch (error) {
+        console.error("This is fetchBanker error: ", error);
+      }
     };
 
     fetchBanker();
   }, []);
 
-
-
   useEffect(() => {
     const fetchCBHI = async () => {
-      const response = await api.get("/Providers/list-providers");
+      try {
+        const response = await api.get("/Providers/list-providers");
 
-      const data = response?.data;
+        const data = response?.data;
 
-      const totalProvider = new Set(data.map((item) => item.provider)).size;
+        const totalProvider = new Set(data.map((item) => item.provider)).size;
 
-      setCbhiProvider(totalProvider);
+        setCbhiProvider(totalProvider);
+      } catch (error) {
+        console.error("This is fetchCBHI error: ", error);
+      }
     };
 
     fetchCBHI();

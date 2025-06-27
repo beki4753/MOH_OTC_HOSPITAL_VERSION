@@ -240,8 +240,16 @@ const TreatmentEntryR = () => {
       try {
         const response = await api.get("/Lookup/payment-purpose");
         if (response?.status === 200) {
-          setReasons(response?.data?.map((item) => item.purpose));
-          setFullReasons(response?.data);
+          const allowedGroups = ["LabSet", "LabTest"].map((str) =>
+            str.toLowerCase()
+          );
+
+          const finalG = response?.data?.filter((item) =>
+            allowedGroups.includes(item?.group?.toLowerCase())
+          );
+
+          setReasons(finalG?.map((item) => item.purpose));
+          setFullReasons(finalG);
         }
       } catch (error) {
         console.error(error.message);
@@ -309,10 +317,37 @@ const TreatmentEntryR = () => {
       renderCell: (params) => {
         try {
           const status = params?.row?.paid;
-          const result = status ? "Paid" : "Pending";
-          return result;
+          if (status) {
+            return (
+              <span
+                style={{
+                  margin: "0px",
+                  color: "green",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                ✅ Paid
+              </span>
+            );
+          } else {
+            return (
+              <span
+                style={{
+                  margin: "0px",
+                  color: "red",
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                ⌛ Pending
+              </span>
+            );
+          }
         } catch (error) {
-          console.error("Error Occured on rendering: ", error);
+          console.error("Error Occurred on rendering: ", error);
+          return null;
         }
       },
     },
@@ -400,7 +435,7 @@ const TreatmentEntryR = () => {
         formData?.cardNumber,
         getCategoryName(formData?.category)
       );
-      
+
       if (fetched?.length > 0) {
         setFormData((prev) => ({
           ...prev,

@@ -169,8 +169,7 @@ const PaymentTypeLimitForm = () => {
         }
       } else {
         const response = await api.post("/Setting/paymentType-limit", payload);
-
-        if (response?.status === 201) {
+        if (response?.status === 200 || response?.status === 201) {
           toast.success(response?.data?.msg || "Created successfully.");
           setForm(initialState);
           setRefresh((prev) => !prev);

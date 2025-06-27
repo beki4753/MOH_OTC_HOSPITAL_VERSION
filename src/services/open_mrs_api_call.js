@@ -92,6 +92,7 @@ export const fetchOrder = async (cardNumber, ordertype) => {
       cardNumber,
       orderType: ordertype,
     });
+
     if (response?.status === 200) {
       return response.data.orders;
     } else {
